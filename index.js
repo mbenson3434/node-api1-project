@@ -24,6 +24,27 @@ const User = {
     getById(id) {
         return userDatabase.find(user => user.id === id)
     },
+    delete(id) {
+        const user = userDatabase.find(user => user.id === id)
+        if (user) {
+            userDatabase = userDatabase.filter(item => item.id !== id)
+        }
+        return user
+    },
+    update(id, changes) {
+        const user = userDatabase.find(user => user.id === id)
+        if (!user) {
+            return null
+        } else {
+            const updatedUser = { id, ...changes }
+            userDatabase = userDatabase.map(user => {
+                if (user.id === id) return updatedUser
+                return user
+            })
+            return updatedUser
+        }
+    }
+    
 }
 
 //endpoint to get users
@@ -50,6 +71,29 @@ server.post('/api/users', (req, res) => {
         res.status(201).json(newlyCreatedUser)
     }
 })
+server.delete('/api/users/:id', (req, res) => {
+    const { id } = req.params
+    const deleted = User.delete(id)
+
+    if (deleted) {
+        res.status(200).json(deleted)
+    } else {
+        res.status(404).json({ message: 'User not found with id ' + id})
+    }
+})
+server.put('/api/users/:id', (req, res) => {
+    const changes = req.body
+    const { id } = req.params
+    const updatedUser = User.update(id, changes)
+
+    if (updatedUser) {
+        res.status(200).json(updatedUser)
+    } else {
+        res.status(404).json({ message: 'User not found with id ' + id })
+    }
+})
+
+
 
 
 // catch-all endpoint must be at the bottom. Order is important
